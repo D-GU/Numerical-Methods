@@ -3,6 +3,7 @@
 #include "library.h"
 
 double f(double x) {
+    /// Function
     return exp(x) * x;
 }
 

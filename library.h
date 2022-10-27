@@ -290,7 +290,6 @@ public:
 
 private:
     double eps_;
-    double solution_;
 
     std::vector<double> result_{0, 0, 0};
 

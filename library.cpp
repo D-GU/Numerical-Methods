@@ -541,6 +541,7 @@ std::vector<double> Runge_Kutta::jump(double function(double, double)) {
 }
 
 std::vector<double> Runge_Kutta::rungeKuttaSolution(double fDerivative(double x, double y), double f(double x)) {
+    /// Comments
     int counter = 0;
 
     while (start_ < end_) {
