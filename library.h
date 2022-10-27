@@ -271,7 +271,7 @@ private:
 
 class Runge_Kutta {
 public:
-    Runge_Kutta(double start, double y0, double h, double eps);
+    Runge_Kutta(double start, double end, double y0, double h, double eps);
 
     ~Runge_Kutta() = default;
 
@@ -280,13 +280,19 @@ public:
 
     double step(double function(double x, double y));
 
+    std::vector<double> rungeKuttaSolution(double fDerivative(double x, double y), double f(double x));
+
 public:
     double start_;
     double y0_;
     double h_;
+    double end_;
 
 private:
     double eps_;
+    double solution_;
+
+    std::vector<double> result_{0, 0, 0};
 
 
 };

@@ -491,10 +491,12 @@ double MonteCarlo::calculateMonteCarlo2(double (*function)(double, double)) {
 }
 
 Runge_Kutta::Runge_Kutta(double start,
+                         double end,
                          double y0,
                          double h,
                          double eps)
         : start_(start),
+          end_(end),
           y0_(y0),
           h_(h),
           eps_(eps) {
@@ -519,9 +521,10 @@ std::vector<double> Runge_Kutta::jump(double function(double, double)) {
     while (true) {
         h_ /= 2;
         yh2 = step(function);
+
+        /// Finding the result on the point f(x + h) where h is halfed
         start_ += h_;
         y0_ = yh2;
-
         y2h2 = step(function);
 
         start_ -= h_;
@@ -535,5 +538,27 @@ std::vector<double> Runge_Kutta::jump(double function(double, double)) {
             yh = yh2;
         }
     }
+}
+
+std::vector<double> Runge_Kutta::rungeKuttaSolution(double fDerivative(double x, double y), double f(double x)) {
+    int counter = 0;
+
+    while (start_ < end_) {
+        counter++;
+        result_ = jump(fDerivative);
+
+        start_ = result_[0];
+        y0_ = result_[1];
+
+        std::cout << "Шаг " << counter << ": Узел: " << result_[2] << " Приближенное решение: (" << start_ << ", "
+                  << y0_
+                  << ") " << " |yi - y(xi)| <= eps: " << fabs(y0_ - f(start_)) << "\n";
+
+        if (end_ - start_ < h_) {
+            h_ = end_ - start_;
+        }
+    }
+
+    return std::vector<double>{start_, y0_};
 }
 
