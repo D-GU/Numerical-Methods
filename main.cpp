@@ -1,5 +1,6 @@
 #include "library.h"
 
+/*
 double f(double x, double u, double v) {
     return u + v + exp(x) * (1 - x * x);
 }
@@ -21,7 +22,7 @@ double F(double u, double v, double alpha, double betta, double gamma) {
 }
 
 void rungeTest() {
-    /*int counter = 0;
+    int counter = 0;
 
     double start = 0;
     double end = 1;
@@ -47,7 +48,7 @@ void rungeTest() {
         if (end - runge.start_ < runge.h_) {
             runge.h_ = end - runge.start_;
         }
-    }*/
+    }
 }
 
 void shotsTest() {
@@ -89,8 +90,57 @@ void shotsTest() {
     double sol = shots.shootingSolution();
 
 }
+*/
+
+double f(double x) {
+    return cos(x);
+}
+
+std::vector<double> g(std::vector<double> &vec, double p, double q) {
+    std::vector<double> result(vec.size(), 0);
+    for (int i = 0; i < result.size(); i++) {
+        result[i] = -cos(vec[i]) - (p * sin(vec[i])) + (q * cos(vec[i]));
+    }
+
+    /*for (double &i: vec) {
+        i = -cos(i) - (p * sin(i)) + (q * cos(i));
+    }*/
+
+    return result;
+}
+
+void gridTest() {
+    double start = 0;
+    double end = M_PI;
+
+    int n = 32;
+    int lin_space_num = n + 1;
+
+    double p = 3;
+    double q = -3;
+
+    std::vector<double> alpha{1, 1};
+    std::vector<double> betta{0, 0};
+    std::vector<double> gamma{cos(start), cos(end)};
+
+    std::vector<double> a(n + 1, 0);
+    std::vector<double> b(n + 1, 0);
+    std::vector<double> c(n + 1, 0);
+    std::vector<double> d(n + 1, 0);
+
+    NumericalMethods::GridMethod gridMethod(
+            f, g, n, start, end, p, q, lin_space_num, alpha, betta, gamma, a, b, c, d
+    );
+
+    std::vector<double> s = gridMethod.solveGrid();
+    std::vector<double> gr = gridMethod.getLinSpace();
+
+    for (int i = 0; i < n + 1; i++) {
+        std::cout << "x[" << i << "] = " << gr[i] << "\t y[" << i << "] = " << s[i] << " " << cos(gr[i]) << "\n";
+    }
+}
 
 int main() {
-    shotsTest();
+    gridTest();
     return 0;
 }

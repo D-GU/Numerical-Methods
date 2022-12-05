@@ -353,6 +353,57 @@ Example:
         double (*F_)(double, double, double, double, double);
     };
 
+    class GridMethod {
+    public:
+        GridMethod(double f(double),
+                   std::vector<double> g(std::vector<double> &, double, double),
+                   int n,
+                   double start,
+                   double end,
+                   double p,
+                   double q,
+                   int lin_space_num,
+                   std::vector<double> alpha,
+                   std::vector<double> betta,
+                   std::vector<double> gamma,
+                   std::vector<double> a,
+                   std::vector<double> b,
+                   std::vector<double> c,
+                   std::vector<double> d
+        );
 
+        ~GridMethod() = default;
+
+    public:
+        std::vector<double> solveGrid();
+
+        std::vector<double> getLinSpace();
+
+        std::vector<double> sweepMethod();
+
+    private:
+        double (*f_)(double);
+
+        std::vector<double> (*g_)(std::vector<double> &, double, double);
+
+        double start_;
+        double end_;
+        double h_;
+        double p_;
+        double q_;
+        int lin_space_num_;
+
+        int n_;
+
+        std::vector<double> alpha_;
+        std::vector<double> betta_;
+        std::vector<double> gamma_;
+        std::vector<double> a_;
+        std::vector<double> b_;
+        std::vector<double> c_;
+        std::vector<double> d_;
+        std::vector<double> solution_;
+
+    };
 }
 #endif //NUMERICALMETHODSLIB_LIBRARY_H

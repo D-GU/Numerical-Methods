@@ -1,6 +1,7 @@
 #include "library.h"
 #include "cmath"
 #include <fstream>
+#include <utility>
 
 
 double randomDouble(double start, double end) {
@@ -823,3 +824,98 @@ double NumericalMethods::ShootingMethod::shootingSolution() {
 
     return F0;
 }
+
+NumericalMethods::GridMethod::GridMethod(double (*f)(double),
+                                         std::vector<double> (*g)(std::vector<double> &, double, double),
+                                         int n,
+                                         double start,
+                                         double end,
+                                         double p,
+                                         double q,
+                                         int lin_space_num,
+                                         std::vector<double> alpha,
+                                         std::vector<double> betta,
+                                         std::vector<double> gamma,
+                                         std::vector<double> a,
+                                         std::vector<double> b,
+                                         std::vector<double> c,
+                                         std::vector<double> d) :
+        f_(f),
+        g_(g),
+        start_(start),
+        end_(end),
+        h_(start + end / n),
+        n_(n),
+        p_(p),
+        q_(q),
+        lin_space_num_(lin_space_num),
+        alpha_(std::move(alpha)),
+        betta_(std::move(betta)),
+        gamma_(std::move(gamma)),
+        a_(std::move(a)),
+        b_(std::move(b)),
+        c_(std::move(c)),
+        d_(std::move(d)) {
+
+    solution_.resize(n_);
+}
+
+std::vector<double> NumericalMethods::GridMethod::getLinSpace() {
+    std::vector<double> linspaced;
+
+    double delta = (end_ - start_) / (lin_space_num_) - 1;
+
+    for (int i = 0; i < lin_space_num_ - 1; i++) {
+        linspaced.push_back(start_ + delta * i);
+    }
+
+    linspaced.push_back(end_);
+
+    return linspaced;
+}
+
+std::vector<double> NumericalMethods::GridMethod::solveGrid() {
+    d_ = getLinSpace();
+    d_ = g_(d_, p_, q_);
+
+    for (int i = 1; i < n_; i++) {
+        a_[i] = (1 - (h_ * 0.5) * p_) / (h_ * h_);
+        b_[i] = (-2 + (h_ * h_) * q_) / (h_ * h_);
+        c_[i] = (1 + (h_ * 0.5) * p_) / (h_ * h_);
+    }
+
+    b_[0] = alpha_[0] - betta_[0] / h_;
+    c_[0] = betta_[0] / h_;
+    d_[0] = gamma_[0];
+
+    b_[n_] = alpha_[1] - betta_[1] / h_;
+    c_[n_] = betta_[1] / h_;
+    d_[n_] = gamma_[1];
+
+    return sweepMethod();
+}
+
+std::vector<double> NumericalMethods::GridMethod::sweepMethod() {
+    int size = a_.size();
+    std::vector<double> P(size - 1, 0);
+    std::vector<double> Q(size - 1, 0);
+    std::vector<double> m(a_.size(), 0);
+
+    P[0] = -c_[0] / b_[0];
+    Q[0] = d_[0] / b_[0];
+
+    for (int i = 1; i < size - 1; i++) {
+        P[i] = -c_[i] / (a_[i] * P[i - 1] + b_[i]);
+        Q[i] = (d_[i] - a_[i] * Q[i - 1]) / (a_[i] * P[i - 1] + b_[i]);
+    }
+
+    m[size - 1] = (d_[size - 1] - a_[size - 1] * Q[size - 2]) / (a_[size - 1] * P[size - 2] + b_[size - 1]);
+
+    for (int i = size - 2; i > -1; i--) {
+        m[i] = P[i] * m[i + 1] + Q[i];
+    }
+
+    return m;
+}
+
+
