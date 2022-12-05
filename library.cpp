@@ -2,6 +2,7 @@
 #include "cmath"
 #include <fstream>
 
+
 double randomDouble(double start, double end) {
     std::random_device rd;
     std::default_random_engine eng(rd());
@@ -9,17 +10,17 @@ double randomDouble(double start, double end) {
     return distribution(eng);
 }
 
-Dichotomy::Dichotomy(double start,
-                     double end,
-                     double epsilon) :
+NumericalMethods::Dichotomy::Dichotomy(double start,
+                                       double end,
+                                       double epsilon) :
         start_(start),
         end_(end),
         eps_(epsilon) {
 
 }
 
-double Dichotomy::calculateRoot(double (*function)(double),
-                                int *div_counter) {
+double NumericalMethods::Dichotomy::calculateRoot(double (*function)(double),
+                                                  int *div_counter) {
     /*
      * First we calculate function values on the start
      * and the end of the section.
@@ -63,7 +64,7 @@ double Dichotomy::calculateRoot(double (*function)(double),
     return 0;
 }
 
-double Secant::calculateRoot(double (*function)(double), int *div_counter) {
+double NumericalMethods::Secant::calculateRoot(double (*function)(double), int *div_counter) {
     /* In the secant method we do the same thing as we did
      * in the dichotomy method but the pivot calculation is different
      *
@@ -99,10 +100,10 @@ double Secant::calculateRoot(double (*function)(double), int *div_counter) {
     return 0;
 }
 
-Gauss::Gauss(short size,
-             const std::string &matrix_filepath,
-             const std::string &vector_filepath,
-             bool create) : size_(size) {
+NumericalMethods::Gauss::Gauss(short size,
+                               const std::string &matrix_filepath,
+                               const std::string &vector_filepath,
+                               bool create) : size_(size) {
 
     std::ifstream numbers;
     numbers.open(matrix_filepath);
@@ -129,15 +130,15 @@ Gauss::Gauss(short size,
     free_row.close();
 }
 
-Gauss::Gauss(short power,
-             std::vector<double> &matrix,
-             std::vector<double> &free_vector) :
-        size_(power),
+NumericalMethods::Gauss::Gauss(short size,
+                               std::vector<double> &matrix,
+                               std::vector<double> &free_vector) :
+        size_(size),
         matrix_(matrix),
         vec_(free_vector) {
 }
 
-std::vector<double> Gauss::findSolutionGauss() {
+std::vector<double> NumericalMethods::Gauss::findSolutionGauss() {
     /* The Gaussian method of finding the algebraic system
      * solution.
      *
@@ -176,7 +177,7 @@ std::vector<double> Gauss::findSolutionGauss() {
         }
 
         if (maximum_ < eps_) {
-            std::cout << "Matrix has no solution" << "\n";
+            std::cout << "Matrix has no solution " << "\n";
             return {};
         }
 
@@ -218,10 +219,72 @@ std::vector<double> Gauss::findSolutionGauss() {
     return result_vec_;
 }
 
-Newton::Newton(double (*function)(double),
-               const std::vector<double> &nodes,
-               double exp_point,
-               short power) :
+std::vector<double> NumericalMethods::Gauss::getReversedMatrix() {
+    reversed_matrix_.resize((2 * size_) * size_);
+
+    for (int i = 0; i < size_; i++) {
+        for (int j = 0; j < size_; j++) {
+            reversed_matrix_[i * size_ + j] = matrix_[i * size_ + j];
+        }
+    }
+
+    for (int i = 0; i < 2 * size_; i++) {
+        for (int j = size_; j < 2 * size_; j++) {
+            (i + size_ == j) ? reversed_matrix_[i * size_ + j] = 1 : reversed_matrix_[i * size_ + j] = 0;
+        }
+    }
+
+    for (int i = 0; i < size_; i++) {
+        for (int j = 0; j < 2 * size_; j++) {
+            std::cout << reversed_matrix_[i * size_ + j] << " ";
+        }
+        std::cout << "\n";
+    }
+
+    const double eps_ = 1e-5;
+    int index_;
+
+    double maximum_;
+    double temp_;
+
+    for (int rows = 0; rows < size_; rows++) {
+        maximum_ = fabs(matrix_[rows * size_ + rows]);
+        index_ = rows;
+
+        for (int i = rows + 1; i < size_; i++) {
+            if (fabs(matrix_[rows * size_ + rows]) > maximum_) {
+                maximum_ = fabs(matrix_[rows * size_ + rows]);
+                index_ = i;
+            }
+        }
+
+        if (maximum_ < eps_) {
+            std::cout << "Matrix has no solution " << "\n";
+            return {};
+        }
+
+        for (int j = 0; j < size_; j++) {
+            std::swap(matrix_[rows * size_ + j], matrix_[index_ * size_ + j]);
+        }
+
+        std::swap(vec_[rows], vec_[index_]);
+
+        for (int i = rows + 1; i < size_; i++) {
+            temp_ = matrix_[i * size_ + rows] / matrix_[rows * size_ + rows];
+            for (int j = rows; j < size_; j++) {
+                matrix_[i * size_ + j] -= temp_ * matrix_[rows * size_ + j];
+            }
+            vec_[i] -= temp_ * vec_[rows];
+        }
+    }
+
+    return reversed_matrix_;
+}
+
+NumericalMethods::Newton::Newton(double (*function)(double),
+                                 const std::vector<double> &nodes,
+                                 double exp_point,
+                                 short power) :
         exp_point_(exp_point),
         power_(power + 1) {
 
@@ -242,7 +305,7 @@ Newton::Newton(double (*function)(double),
 
 }
 
-double Newton::calculateNewton() {
+double NumericalMethods::Newton::calculateNewton() {
 /* First we calculate the divided difference table
  * by the formula: (f_i(x) - f_j(x)) / (x_i - x_j)
  * We calculate this first, so we don't have to calculate
@@ -286,7 +349,7 @@ double Newton::calculateNewton() {
     return result;
 }
 
-IntegralMethod::IntegralMethod(double start, double end, double eps, int step) :
+NumericalMethods::IntegralMethod::IntegralMethod(double start, double end, double eps, int step) :
         start_(start),
         end_(end),
         width_((end - start) / step),
@@ -295,7 +358,7 @@ IntegralMethod::IntegralMethod(double start, double end, double eps, int step) :
 
 }
 
-double IntegralMethod::calculateSimpson(double function(double x)) {
+double NumericalMethods::IntegralMethod::calculateSimpson(double function(double x)) {
     /* For start, we count sum of f(0) + f(1)
      * s1 - sum of odd nodes
      * s2 - sum of even nodes
@@ -358,16 +421,16 @@ double IntegralMethod::calculateSimpson(double function(double x)) {
     return integral2;
 }
 
-CubeSpline::CubeSpline(short power,
-                       double (*function)(double),
-                       std::vector<double> &nodes,
-                       double alpha0,
-                       double alpha1,
-                       double beta0,
-                       double beta1,
-                       double gamma0,
-                       double gamma1,
-                       double exp_point) :
+NumericalMethods::CubeSpline::CubeSpline(short power,
+                                         double (*function)(double),
+                                         std::vector<double> &nodes,
+                                         double alpha0,
+                                         double alpha1,
+                                         double beta0,
+                                         double beta1,
+                                         double gamma0,
+                                         double gamma1,
+                                         double exp_point) :
         alpha0_(alpha0),
         alpha1_(alpha1),
         beta0_(beta0),
@@ -395,7 +458,7 @@ CubeSpline::CubeSpline(short power,
 
 }
 
-void CubeSpline::sweepMethod() {
+void NumericalMethods::CubeSpline::sweepMethod() {
     p_[0] = -c_[0] / b_[0];
     q_[0] = d_[0] / b_[0];
 
@@ -412,7 +475,7 @@ void CubeSpline::sweepMethod() {
 
 }
 
-double CubeSpline::calculateCubeSpline() {
+double NumericalMethods::CubeSpline::calculateCubeSpline() {
     double result_ = 0;
 
     int index = 0;
@@ -455,7 +518,7 @@ double CubeSpline::calculateCubeSpline() {
     return result_;
 }
 
-MonteCarlo::MonteCarlo(long power) :
+NumericalMethods::MonteCarlo::MonteCarlo(long power) :
         power_(power),
         random_x_(0),
         random_y_(0),
@@ -463,7 +526,7 @@ MonteCarlo::MonteCarlo(long power) :
 
 }
 
-double MonteCarlo::calculateMonteCarlo1(double function(double x, double y)) {
+double NumericalMethods::MonteCarlo::calculateMonteCarlo1(double function(double x, double y)) {
     for (int i = 0; i <= power_; i++) {
         random_x_ = randomDouble(0, 1);
         random_y_ = randomDouble(0, 1);
@@ -474,7 +537,7 @@ double MonteCarlo::calculateMonteCarlo1(double function(double x, double y)) {
     return summary_ / power_;
 }
 
-double MonteCarlo::calculateMonteCarlo2(double (*function)(double, double)) {
+double NumericalMethods::MonteCarlo::calculateMonteCarlo2(double (*function)(double, double)) {
     double counter = 0.0;
 
     for (int i = 0; i <= power_; i++) {
@@ -490,19 +553,17 @@ double MonteCarlo::calculateMonteCarlo2(double (*function)(double, double)) {
     return double(counter) / double(power_);
 }
 
-Runge_Kutta::Runge_Kutta(double start,
-                         double end,
-                         double y0,
-                         double h,
-                         double eps)
+NumericalMethods::Runge_Kutta::Runge_Kutta(double start,
+                                           double y0,
+                                           double h,
+                                           double eps)
         : start_(start),
-          end_(end),
           y0_(y0),
           h_(h),
           eps_(eps) {
 }
 
-double Runge_Kutta::step(double function(double, double)) {
+double NumericalMethods::Runge_Kutta::step(double function(double, double)) {
     double phi0 = h_ * function(start_, y0_);
     double phi1 = h_ * function(start_ + h_ / 2, y0_ + phi0 / 2);
     double phi2 = h_ * function(start_ + h_ / 2, y0_ + phi1 / 2);
@@ -512,7 +573,7 @@ double Runge_Kutta::step(double function(double, double)) {
 }
 
 
-std::vector<double> Runge_Kutta::jump(double function(double, double)) {
+std::vector<double> NumericalMethods::Runge_Kutta::jump(double function(double, double)) {
     double yh = step(function);
     double yh2;
     double y2h2;
@@ -521,10 +582,9 @@ std::vector<double> Runge_Kutta::jump(double function(double, double)) {
     while (true) {
         h_ /= 2;
         yh2 = step(function);
-
-        /// Finding the result on the point f(x + h) where h is halfed
         start_ += h_;
         y0_ = yh2;
+
         y2h2 = step(function);
 
         start_ -= h_;
@@ -540,26 +600,226 @@ std::vector<double> Runge_Kutta::jump(double function(double, double)) {
     }
 }
 
-std::vector<double> Runge_Kutta::rungeKuttaSolution(double fDerivative(double x, double y), double f(double x)) {
-    /// Comments
-    int counter = 0;
+NumericalMethods::ShootingMethod::ShootingMethod(double f(double, double, double),
+                                                 double g(double, double, double),
+                                                 double F(double, double, double, double, double),
+                                                 double start,
+                                                 double end,
+                                                 double alpha0,
+                                                 double betta0,
+                                                 double gamma0,
+                                                 double alpha1,
+                                                 double betta1,
+                                                 double gamma1,
+                                                 double h,
+                                                 double eps,
+                                                 double ksi0,
+                                                 double ksi1)
+        : f_(f),
+          g_(g),
+          F_(F),
+          start_(start),
+          end_(end),
+          alpha0_(alpha0),
+          betta0_(betta0),
+          gamma0_(gamma0),
+          alpha1_(alpha1),
+          betta1_(betta1),
+          gamma1_(gamma1),
+          h_(h),
+          eps_(eps),
+          ksi0_(ksi0),
+          ksi1_(ksi1) {
+
+}
+
+std::vector<double> NumericalMethods::ShootingMethod::step() {
+    double phi_0 = h_ * f_(start_, u0_, v0_);
+    double psi_0 = h_ * g_(start_, u0_, v0_);
+    double phi_1 = h_ * f_(start_ + h_ / 2, u0_ + phi_0 / 2, v0_ + psi_0 / 2);
+    double psi_1 = h_ * g_(start_ + h_ / 2, u0_ + phi_0 / 2, v0_ + psi_0 / 2);
+    double phi_2 = h_ * f_(start_ + h_ / 2, u0_ + phi_1 / 2, v0_ + psi_1 / 2);
+    double psi_2 = h_ * g_(start_ + h_ / 2, u0_ + phi_1 / 2, v0_ + psi_1 / 2);
+    double phi_3 = h_ * f_(start_ + h_, u0_ + phi_2, v0_ + psi_2);
+    double psi_3 = h_ * g_(start_ + h_, u0_ + phi_2, v0_ + psi_2);
+    double y1 = u0_ + (phi_0 + 2 * phi_1 + 2 * phi_2 + phi_3) / 6;
+    double y2 = v0_ + (psi_0 + 2 * psi_1 + 2 * psi_2 + psi_3) / 6;
+
+    return {y1, y2};
+}
+
+void NumericalMethods::ShootingMethod::jump() {
+    std::vector<double> s1 = step();
+    std::vector<double> s_half_(0, 2);
+    std::vector<double> s2(0, 2);
+
+    double y1_ = 0;
+    double y2_ = 0;
+
+    double temp1 = u0_;
+    double temp2 = v0_;
+
+    while (true) {
+        h_ /= 2;
+        s_half_ = step();
+
+        start_ += h_;
+
+        y1_ = s_half_[0];
+        y2_ = s_half_[1];
+
+        u0_ = y1_;
+        v0_ = y2_;
+
+        s2 = step();
+
+        start_ -= h_;
+        h_ *= 2;
+        u0_ = temp1;
+        v0_ = temp2;
+
+        if (fabs(s1[0] - s2[0]) < eps_ && fabs(s1[1] - s2[1]) < eps_) {
+            break;
+        } else {
+            h_ /= 2;
+            s1 = s_half_;
+        }
+    }
+
+    start_ += h_;
+
+    double sol1 = s2[0];
+    double sol2 = s2[1];
+
+    u0_ = sol1;
+    v0_ = sol2;
+
+}
+
+
+double NumericalMethods::ShootingMethod::shootingSolution() {
+    double temp_h = h_;
+    double temp_start = start_;
+    double temp_end = end_;
+
+    double temp;
+
+    std::vector<double> jump_solution(0, 3);
+
+    std::cout << "Введите ksi0: ";
+    std::cin >> ksi0_;
+
+    u0_ = ksi0_;
+    v0_ = (gamma0_ - alpha0_ * ksi0_) / betta0_;
 
     while (start_ < end_) {
-        counter++;
-        result_ = jump(fDerivative);
-
-        start_ = result_[0];
-        y0_ = result_[1];
-
-        std::cout << "Шаг " << counter << ": Узел: " << result_[2] << " Приближенное решение: (" << start_ << ", "
-                  << y0_
-                  << ") " << " |yi - y(xi)| <= eps: " << fabs(y0_ - f(start_)) << "\n";
+        jump();
 
         if (end_ - start_ < h_) {
             h_ = end_ - start_;
         }
     }
 
-    return std::vector<double>{start_, y0_};
-}
+    double F0 = F_(u0_, v0_, alpha1_, betta1_, gamma1_);
+    std::cout << "F{ksi}: " << F0 << "\n";
 
+    double temp_u0 = u0_;
+    double temp_v0 = v0_;
+
+    solution_ = 1;
+
+    double F1;
+    double temp_u1;
+    double temp_v1;
+    double ksi_counter = 0;
+
+    while (true) {
+        solution_++;
+        start_ = temp_start;
+        h_ = temp_h;
+
+        ksi_counter++;
+        std::cout << "Введите ksi{" << ksi_counter << "}: ";
+        std::cin >> ksi1_;
+
+        u0_ = ksi1_;
+        v0_ = (gamma0_ - alpha0_ * ksi1_) / betta0_;
+
+        while (start_ < end_) {
+            jump();
+
+            if (end_ - start_ < h_) {
+                h_ = end_ - start_;
+            }
+        }
+
+        F1 = F_(u0_, v0_, alpha1_, betta1_, gamma1_);
+        std::cout << "F{ksi}: " << F1 << "\n";
+
+        temp_u1 = u0_;
+        temp_v1 = v0_;
+
+        if (F0 * F1 < 0) {
+            break;
+        } else {
+            F0 = F1;
+            temp_u0 = temp_u1;
+            temp_v0 = temp_v1;
+            ksi0_ = ksi1_;
+        }
+    }
+
+    std::cout << "Значение F изменило знак" << "\n";
+    std::cout << "\n Начало автоматической стрельбы" << "\n";
+
+    double F_half;
+    double u_half;
+    double v_half;
+
+    /// Автоматическая стрельба
+    while (true) {
+        shots_fired_++;
+        start_ = temp_start;
+        h_ = temp_h;
+
+        ksi_half_ = (ksi0_ + ksi1_) * 0.5;
+
+        u0_ = ksi_half_;
+        v0_ = (gamma0_ - alpha0_ * ksi_half_) / betta0_;
+
+        while (start_ < end_) {
+            jump();
+
+            if (end_ - start_ < h_) {
+                h_ = end_ - start_;
+            }
+        }
+
+        F_half = F_(u0_, v0_, alpha1_, betta1_, gamma1_);
+        u_half = u0_;
+        v_half = v0_;
+
+        if (F0 * F_half < 0) {
+            F1 = F_half;
+            temp_u1 = u_half;
+            temp_v1 = v_half;
+            ksi1_ = ksi_half_;
+        } else {
+            F0 = F_half;
+            temp_u0 = u_half;
+            temp_v0 = v_half;
+            ksi0_ = ksi_half_;
+        }
+
+        if (fabs(F0 - F1) < eps_ * 10 || fabs(F0) < eps_ * 10) {
+            break;
+        }
+    }
+
+    std::cout << "Количество решенных задач: " << solution_ + shots_fired_ << "\n";
+    std::cout << "Количество автоматических выстрелов: " << shots_fired_ << "\n";
+    std::cout << "Значение корня F(ksi) = 0: " << F0 << "\n";
+    std::cout << "U: " << temp_u0 << " | V: " << temp_v0 << "\n";
+
+    return F0;
+}
